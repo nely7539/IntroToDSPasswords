@@ -1,0 +1,230 @@
+---
+title: "Intro to Data Science Final Project: Passwords"
+author: "Nicole Ely, Koribeth Hansen"
+output: html_notebook
+---
+# Passwords and Protecting Our Internet Presence
+
+## Nicole Ely and Koribeth Hansen
+
+## Introduction
+
+Online privacy is a growing concern in 2021. Our personal data is priceless, and identity theft, hacking, and unethical data collection puts that at risk. One of the first lines of defense for our personal data is account passwords.
+
+When creating an account, you're often prompted with password strength criteria, such as:
+
+- Must be at least 6 characters
+- Contain both letters and numbers
+- Uppercase and lower case letters
+- Special characters (!, @, #, etc.)
+
+This data analysis explores the most common passwords and their strength, popularity, time it takes to crack, and length.
+
+## Libraries and Dataset
+
+This data was obtained from the Tidy Tuesday datasets provided by R for Data Science.
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+passwords <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-01-14/passwords.csv')
+```
+
+Using the glimpse function, we began our data analysis:
+
+```{r}
+glimpse(passwords)
+```
+```{r}
+summary(passwords)
+```
+
+
+
+#Univariate Exploration
+
+To begin our exploration, we want to focus on univariate exploration of individual variables.
+
+## Data Visualiztion
+
+
+First, we wanted to visualize the strength of passwords.
+
+
+```{r}
+passwords %>%
+  ggplot() +
+    geom_histogram(aes(x = strength), fill = "#FF8B83") +
+  labs(x= "Strength", y = "Count")
+  
+```
+
+The strength of passwords is generally very low, illustrating that this data-set consists mostly of weak passwords.
+
+
+Distribution of password categories:
+
+```{r}
+passwords %>% 
+  ggplot()+
+  geom_bar(
+    mapping = aes(
+      x = category), fill = "#FF8B83") +
+  labs(
+    title = "Distribution of Password Category",
+    x = "Password Category", 
+    y = "Number of Passwords",
+    fill = "") +
+  coord_flip()
+```
+
+We can see that the distribution of categories has a heavy concentration on name related passwords. This means a very common type of password is someone's name, which often is easy to guess.
+
+
+How long it takes to guess the password (in seconds):
+```{r}
+passwords %>%
+  ggplot() +
+    geom_histogram(aes(x = value), fill = "#FF8B83") +
+  labs(title = "Guessing password distribution",
+       x = "Time (seconds)",
+       y = "Number of passwords")
+```
+The passwords were easily hacked, with a majority of them being cracked within 25 seconds. A small amount had taken more than 75 seconds.
+
+Distribution of length of password
+
+```{r}
+passwords %>%
+  ggplot() +
+    geom_histogram(aes(x = str_length(password)), fill = "#FF8B83") +
+    labs(title = "Length of password distributon",
+       x = "Length",
+       y = "Number of passwords")
+```
+
+The password lengths were concentrated at 6 characters, which is often the minimum amount of characters required by most websites and applications.
+
+
+
+## Multivariate Exploration
+
+Strength vs. time to crack password
+```{r}
+passwords %>%
+  ggplot() +
+    geom_point(aes(x = value, y = strength), color = "#FF8B83") +
+  xlim(0,15) +
+  labs(title = "Strength vs. time required to crack",
+       x = "Time (seconds)",
+       y = "Strength")
+```
+
+There does not seem to be a strong relationship between strength and time it takes to hack the passwords, which may be due to the limited data-set.
+
+
+Category of password vs. Strength
+```{r}
+passwords %>%
+  ggplot() +
+    geom_boxplot(aes(x = strength, y = category), color = "#FF8B83") +
+    labs(title = "Category vs. strength",
+       x = "Strength",
+       y = "Category")
+```
+
+Category related to strength can be seen here. Most categories such as food and name have extremely low strength levels, but nerdy-pop and simple-alphanumeric each have higher strength values in their outliers. These passwords would be pop-culture related and random combinations of numbers and letters, respectively.
+
+
+Rank vs. Category
+```{r}
+passwords %>%
+  ggplot() +
+    geom_boxplot(aes(x = rank, y = category), color = "#FF8B83") +
+    labs(title = "Rank vs. category",
+       x = "Rank",
+       y = "Category")
+```
+
+Category in relation to rank (popularity), can be seen. No category stands out as an extremely popular category. The distribution between rank and categories is fairly normal.
+
+
+
+4) Length of password vs. Strength
+```{r}
+passwords %>%
+  ggplot() +
+    geom_point(aes(x = str_length(password), y = strength), color = "#FF8B83") +
+    labs(title = "Length of password vs. time required to crack",
+       x = "Length",
+       y = "Strength")
+```
+
+The relationship between length and strength shows there is some effect that length may have on strength. Lengths 7 and 8 both have outliers in the higher values of strength.
+
+
+#Data Analysis
+
+1) Which password was the most popular?
+```{r}
+passwords %>% 
+  filter(rank == 1)
+```
+
+
+2) Filter passwords by strength:
+```{r}
+passwords %>% 
+  summarise(password, strength) %>% 
+  arrange(desc(strength)) %>% 
+  head()
+  
+```
+
+
+3) What is/are the strongest password(s)?
+
+```{r}
+passwords %>% 
+  summarise(password, strength) %>% 
+  arrange(desc(strength)) %>% 
+  head(1)
+```
+
+
+4) Which password has the longest length? What is the strength of that password?
+```{r}
+passwords %>% 
+  mutate(leng = str_length(password)) %>% 
+  summarise(password, leng) %>% 
+  arrange(desc(leng))
+```
+
+
+```{r}
+passwords %>% 
+  mutate(leng = str_length(password)) %>% 
+  summarise(password, leng, strength) %>% 
+  arrange(desc(leng)) %>% 
+  head(1)
+```
+
+## Conclusion
+
+The data-set chosen from Tidy Tuesdays was a large set of data that had information such as the password, categories they fall under, strength, length, and time it took for hackers to crack. From working with the data-set, we can see that having a long password does not necessarily mean the password would be strong. The longest password, with a length of nine characters, only has a strength rating of 4. In fact, the strongest password from the data, rush2112, was 8 characters long and only made up of one 4-letter word and 4 numbers. Simple-alphanumeric passwords were some of the easiest for hackers to guess, besides "password", which only took 2.17 seconds. Password-related passwords were the most common ones chosen among the data and the ones hackers could crack the fastest.
+
+
+## Future Works
+
+This data-set primarily consisted of relatively weak passwords, so it was not completely representative of the strength of modern-day passwords. Expanding the data to include stronger and less common passwords would allow us to further explore the patterns of more realistic passwords.
+
+
+## Citations
+
+Data set sourced from Information is Beautiful. 
+Obtained from R for Data Science, Tidy Tuesday 2020.
+
+https://github.com/rfordatascience/tidytuesday/blob/master/data/2020/2020-01-14/readme.md
+
+
+
